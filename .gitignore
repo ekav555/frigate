@@ -1,0 +1,10 @@
+# Frigate runtime data
+storage/
+*.db
+*.db-shm
+*.db-wal
+
+# Secrets - never commit actual passwords
+# The config.yml in this repo uses placeholders:
+#   {MQTT_PASSWORD} - replace on the Frigate LXC after deployment
+#   {FRIGATE_RTSP_PASSWORD} - replace with camera passwords

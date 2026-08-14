@@ -1,0 +1,121 @@
+# =============================================================
+# Frigate NVR Configuration
+# =============================================================
+# Docs: https://docs.frigate.video/configuration/
+# =============================================================
+
+mqtt:
+  enabled: true
+  host: 192.168.68.120
+  port: 1883
+  user: mqtt-user
+  password: "{MQTT_PASSWORD}"
+
+detectors:
+  cpu1:
+    type: cpu
+    num_threads: 2
+
+ffmpeg:
+  hwaccel_args: preset-vaapi
+
+# -------------------------------------------------------
+# Recording defaults
+# -------------------------------------------------------
+record:
+  enabled: true
+  retain:
+    days: 3
+    mode: motion
+  events:
+    retain:
+      default: 14
+      mode: active_objects
+
+# -------------------------------------------------------
+# Snapshot defaults
+# -------------------------------------------------------
+snapshots:
+  enabled: true
+  retain:
+    default: 14
+
+# -------------------------------------------------------
+# Object detection defaults
+# -------------------------------------------------------
+objects:
+  track:
+    - person
+    - car
+    - dog
+    - cat
+  filters:
+    person:
+      min_area: 5000
+      threshold: 0.7
+    car:
+      min_area: 10000
+      threshold: 0.7
+
+# -------------------------------------------------------
+# Cameras
+# -------------------------------------------------------
+# Cameras are disabled until you have them set up.
+# When a camera arrives:
+#   1. Set it up on your network with a static IP
+#   2. Set its admin password via Reolink app
+#   3. Set main stream to H.264 (not H.265) in camera settings
+#   4. Update the IP/password below
+#   5. Set enabled: true
+#   6. Restart Frigate: docker compose restart
+# -------------------------------------------------------
+
+cameras:
+  front_door:
+    enabled: false
+    ffmpeg:
+      inputs:
+        - path: rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.68.XXX:554/h264Preview_01_sub
+          roles:
+            - detect
+        - path: rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.68.XXX:554/h264Preview_01_main
+          roles:
+            - record
+    detect:
+      width: 640
+      height: 360
+      fps: 5
+    objects:
+      track:
+        - person
+        - car
+        - dog
+        - cat
+
+  driveway:
+    enabled: false
+    ffmpeg:
+      inputs:
+        - path: rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.68.YYY:554/h264Preview_01_sub
+          roles:
+            - detect
+        - path: rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.68.YYY:554/h264Preview_01_main
+          roles:
+            - record
+    detect:
+      width: 640
+      height: 360
+      fps: 5
+    objects:
+      track:
+        - person
+        - car
+        - dog
+        - cat
+
+# -------------------------------------------------------
+# UI settings
+# -------------------------------------------------------
+ui:
+  live_mode: mse
+  timezone: America/New_York
