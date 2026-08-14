@@ -15,8 +15,8 @@ services:
         tmpfs:
           size: 1000000000
     ports:
-      - "5000:5000"   # Frigate web UI
-      - "8971:8971"   # Frigate API
+      # - "5000:5000" # Internal unauthenticated port -- DO NOT expose
+      - "8971:8971"   # Authenticated UI and API
       - "8554:8554"   # RTSP restream
       - "8555:8555/tcp" # WebRTC over TCP
       - "8555:8555/udp" # WebRTC over UDP
