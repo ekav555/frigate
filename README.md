@@ -38,6 +38,7 @@ custom Water Meter Monitor add-on onto rtlamr2mqtt in this LXC.
 | **Hardware Decode** | Intel Quick Sync (VAAPI) via /dev/dri passthrough |
 | **MQTT Broker** | Mosquitto on Home Assistant (192.168.68.120:1883) |
 | **Water Meter** | rtlamr2mqtt in this LXC (USB RTL-SDR passthrough) |
+| **Frigate media** | USB HDD mounted at `/mnt/frigate-storage` (host + LXC) |
 | **Remote Access** | Cloudflare Tunnel (`cam.ekav555.com`) |
 
 ## Network
