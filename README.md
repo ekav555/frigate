@@ -12,17 +12,21 @@ Security camera system using [Frigate](https://docs.frigate.video/) running in a
 │                                          │
 │  ┌──────────────┐  ┌─────────────────┐   │
 │  │  VM 100      │  │  LXC 101        │   │
-│  │  Home Assist.│  │  Frigate        │   │
+│  │  Home Assist.│  │  Frigate + SDR  │   │
 │  │  .68.120     │  │  .68.121        │   │
 │  │              │  │                 │   │
-│  │  - Mosquitto │  │  - Docker       │   │
-│  │    (MQTT)    │  │    └─ Frigate   │   │
-│  └──────────────┘  └─────────────────┘   │
+│  │  - Mosquitto │  │  - Frigate      │   │
+│  │    (MQTT)    │  │  - rtlamr2mqtt  │   │
+│  └──────────────┘  │    (RTL-SDR USB)│   │
+│                    └─────────────────┘   │
 │                                          │
 │  Host services:                          │
-│  - rtl_tcp, cloudflared                  │
+│  - cloudflared                           │
 └──────────────────────────────────────────┘
 ```
+
+See also [MIGRATION-WATER-METER.md](MIGRATION-WATER-METER.md) for moving off the
+custom Water Meter Monitor add-on onto rtlamr2mqtt in this LXC.
 
 ## Components
 
@@ -33,7 +37,8 @@ Security camera system using [Frigate](https://docs.frigate.video/) running in a
 | **NVR Software** | Frigate (Docker container) |
 | **Hardware Decode** | Intel Quick Sync (VAAPI) via /dev/dri passthrough |
 | **MQTT Broker** | Mosquitto on Home Assistant (192.168.68.120:1883) |
-| **Remote Access** | Cloudflare Tunnel (frigate.ekav555.com) |
+| **Water Meter** | rtlamr2mqtt in this LXC (USB RTL-SDR passthrough) |
+| **Remote Access** | Cloudflare Tunnel (`cam.ekav555.com`) |
 
 ## Network
 

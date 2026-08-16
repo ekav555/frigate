@@ -21,4 +21,17 @@ services:
       - "8555:8555/tcp" # WebRTC over TCP
       - "8555:8555/udp" # WebRTC over UDP
     environment:
-      FRIGATE_RTSP_PASSWORD: "password"
+      FRIGATE_RTSP_PASSWORD: "${FRIGATE_RTSP_PASSWORD:-password}"
+
+  # Water meter via RTL-SDR (USB passed into this LXC)
+  # Replaces the custom HA Water Meter Monitor add-on + host rtl_tcp
+  rtlamr2mqtt:
+    container_name: rtlamr2mqtt
+    image: allangood/rtlamr2mqtt:latest
+    restart: unless-stopped
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+    volumes:
+      - ./rtlamr2mqtt.yaml:/etc/rtlamr2mqtt.yaml:ro
+    # Privileged helps with USB claim after host rtl_tcp leftovers
+    privileged: true

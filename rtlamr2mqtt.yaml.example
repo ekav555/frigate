@@ -1,0 +1,33 @@
+# =============================================================
+# rtlamr2mqtt configuration EXAMPLE
+# Copy to /opt/frigate/rtlamr2mqtt.yaml and set mqtt.password
+# Docs: https://github.com/allangood/rtlamr2mqtt
+# =============================================================
+
+general:
+  sleep_for: 0
+  verbosity: info
+  device_id: 0
+
+mqtt:
+  host: 192.168.68.120
+  port: 1883
+  user: mqtt-user
+  password: "CHANGE_ME"
+  ha_autodiscovery_topic: homeassistant
+  ha_status_topic: homeassistant/status
+  base_topic: rtlamr
+  discovery_interval: 300
+
+meters:
+  - id: 75420327
+    protocol: scm+
+    name: house_water
+    format: "##########"
+    unit_of_measurement: gal
+    icon: mdi:water
+    device_class: water
+    state_class: total_increasing
+    force_update: true
+    manufacturer: Neptune
+    model: SCM+

@@ -1,3 +1,7 @@
+# Secrets
+.env
+rtlamr2mqtt.yaml
+
 # Frigate runtime data
 storage/
 *.db
@@ -5,6 +9,4 @@ storage/
 *.db-wal
 
 # Secrets - never commit actual passwords
-# The config.yml in this repo uses placeholders:
-#   {MQTT_PASSWORD} - replace on the Frigate LXC after deployment
-#   {FRIGATE_RTSP_PASSWORD} - replace with camera passwords
+# Use rtlamr2mqtt.yaml.example and .env.example as templates on the LXC
