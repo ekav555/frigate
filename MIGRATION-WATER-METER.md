@@ -84,10 +84,19 @@ cd /config && git pull origin hamain
 
 Then **Developer Tools → YAML → Check Configuration → Restart**.
 
-New entities (after MQTT discovery):
-- `sensor.house_water` — cumulative reading (from rtlamr2mqtt)
-- `sensor.house_water_daily` — daily usage (utility_meter)
-- `sensor.house_water_flow_rate` — gal/h (derivative)
+New entities (after MQTT discovery — names depend on HA MQTT naming):
+
+| Entity | Role |
+|--------|------|
+| **`sensor.house_water_house_water_2`** | Live cumulative reading from rtlamr2mqtt (confirmed 2026-08-16) |
+| `sensor.house_water_daily` | Daily usage (`utility_meter`) |
+| `sensor.house_water_hourly` | Hourly usage (`utility_meter`) |
+| `sensor.house_water_flow_rate` | gal/h (`derivative` in `sensors_history.yaml`) |
+
+Point HA templates / utility meters at **`sensor.house_water_house_water_2`**, not the old
+`sensor.house_water_reading` / `water_meter_75420327_*` entities.
+
+See also [SESSION-2026-08-16.md](SESSION-2026-08-16.md).
 
 ## Step F — Verify
 

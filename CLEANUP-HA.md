@@ -40,10 +40,12 @@ Then **Developer Tools → YAML → Check Configuration → Restart Home Assista
 
 After rtlamr2mqtt is running, search Developer Tools → States for:
 
-- `sensor.house_water`
+- `sensor.house_water_house_water_2` — live reading (rtlamr2mqtt)
 - `sensor.house_water_daily`
 - `sensor.house_water_hourly`
 - `sensor.house_water_flow_rate`
+
+Delete stale MQTT device **Water Meter 75420327** if `sensor.water_meter_75420327_*` still appear.
 
 ## 6. Archive the old GitHub repo (later)
 
