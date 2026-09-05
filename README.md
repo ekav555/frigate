@@ -31,7 +31,7 @@ Security camera system using [Frigate](https://docs.frigate.video/) in a Proxmox
 
 | Component | Details |
 |---|---|
-| **Cameras** | Reolink RLC-810A ×2 (`front_door`, `back_yard`); Amcrest (`garden_view`) |
+| **Cameras** | Reolink RLC-810A ×2 (`front_porch`, `drive_way`) |
 | **PoE Switch** | STEAMEMO 8-Port Managed Gigabit PoE+ (120W) |
 | **NVR Software** | Frigate (Docker) |
 | **Hardware Decode** | Intel Quick Sync (VAAPI) via `/dev/dri` |
@@ -47,8 +47,8 @@ Security camera system using [Frigate](https://docs.frigate.video/) in a Proxmox
 | Proxmox host | 192.168.68.50 |
 | Home Assistant VM | 192.168.68.120 |
 | Frigate LXC | **192.168.68.121** (static — required for Cloudflare) |
-| front_door (Reolink) | 192.168.68.124 |
-| garden_view (Amcrest) | 192.168.68.75 |
+| front_porch (Reolink) | 192.168.68.124 |
+| drive_way (Reolink) | set in live Frigate config |
 
 ## Ports
 
@@ -73,10 +73,14 @@ Security camera system using [Frigate](https://docs.frigate.video/) in a Proxmox
 
 Broadwell Quick Sync does **not** handle HEVC well on the detect path.
 
-| Brand | Detect | Record | Notes |
-|-------|--------|--------|-------|
-| Reolink | `h264Preview_01_sub` | `h265Preview_01_main` | Add `audio` role on main + `audio.enabled: true` |
+| Brand | Detect | Record + live | Notes |
+|-------|--------|---------------|-------|
+| Reolink | `h264Preview_01_sub` | `h265Preview_01_main` | go2rtc restream; `live.streams` Main/Sub |
 | Amcrest | `subtype=1` Extra = **H.264** | `subtype=0` Main | Extra must not be H.265 or detect crashes |
+
+Without go2rtc, Frigate live falls back to **jsmpeg of the 640p detect feed** (much softer than the Reolink app). With go2rtc + `live.streams`, pick **Main** in the Frigate player for HD live; detect stays on Sub.
+
+HA `picture-entity` cards still often show the detect entity — use Frigate’s own UI (or a Frigate/WebRTC card) for Reolink-app-like live quality.
 
 Template: `config/config.yml` (passwords via `{FRIGATE_RTSP_PASSWORD}` / env — live secrets stay on the LXC).
 

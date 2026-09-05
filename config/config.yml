@@ -22,6 +22,21 @@ detectors:
 ffmpeg:
   hwaccel_args: preset-vaapi
 
+# go2rtc restreams: detect stays on H.264 sub; live/record use main.
+# Without this, Frigate live falls back to jsmpeg of the 640p detect feed.
+go2rtc:
+  streams:
+    front_porch:
+      - rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.68.124:554/h265Preview_01_main
+      - "ffmpeg:front_porch#audio=opus"
+    front_porch_sub:
+      - rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.68.124:554/h264Preview_01_sub
+    drive_way:
+      - rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.68.XXX:554/h265Preview_01_main
+      - "ffmpeg:drive_way#audio=opus"
+    drive_way_sub:
+      - rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.68.XXX:554/h264Preview_01_sub
+
 record:
   enabled: true
   retain:
@@ -52,20 +67,22 @@ objects:
       threshold: 0.7
 
 # -------------------------------------------------------
-# Cameras (as of 2026-08-16)
-# Reolink: detect = H.264 sub, record = H.265 main + audio
-# Amcrest: Extra (subtype=1) MUST be H.264 for Broadwell VAAPI
+# Cameras
+# Detect = H.264 sub (Broadwell-safe). Record + live = main.
+# In Frigate UI, pick "Main" on the live player if it defaults to Sub.
 # -------------------------------------------------------
 
 cameras:
-  front_door:
+  front_porch:
     enabled: true
     ffmpeg:
       inputs:
-        - path: rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.68.124:554/h264Preview_01_sub
+        - path: rtsp://127.0.0.1:8554/front_porch_sub
+          input_args: preset-rtsp-restream
           roles:
             - detect
-        - path: rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.68.124:554/h265Preview_01_main
+        - path: rtsp://127.0.0.1:8554/front_porch
+          input_args: preset-rtsp-restream
           roles:
             - record
             - audio
@@ -75,6 +92,10 @@ cameras:
       width: 640
       height: 360
       fps: 5
+    live:
+      streams:
+        Main: front_porch
+        Sub: front_porch_sub
     objects:
       track:
         - person
@@ -82,14 +103,16 @@ cameras:
         - dog
         - cat
 
-  back_yard:
+  drive_way:
     enabled: true
     ffmpeg:
       inputs:
-        - path: rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.68.XXX:554/h264Preview_01_sub
+        - path: rtsp://127.0.0.1:8554/drive_way_sub
+          input_args: preset-rtsp-restream
           roles:
             - detect
-        - path: rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.68.XXX:554/h265Preview_01_main
+        - path: rtsp://127.0.0.1:8554/drive_way
+          input_args: preset-rtsp-restream
           roles:
             - record
             - audio
@@ -99,27 +122,10 @@ cameras:
       width: 640
       height: 360
       fps: 5
-    objects:
-      track:
-        - person
-        - car
-        - dog
-        - cat
-
-  garden_view:
-    enabled: true
-    ffmpeg:
-      inputs:
-        - path: rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.68.75:554/cam/realmonitor?channel=1&subtype=1
-          roles:
-            - detect
-        - path: rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.68.75:554/cam/realmonitor?channel=1&subtype=0
-          roles:
-            - record
-    detect:
-      width: 640
-      height: 480
-      fps: 5
+    live:
+      streams:
+        Main: drive_way
+        Sub: drive_way_sub
     objects:
       track:
         - person
