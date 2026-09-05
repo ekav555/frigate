@@ -47,9 +47,9 @@ Security camera system using [Frigate](https://docs.frigate.video/) in a Proxmox
 | Proxmox host | 192.168.68.50 |
 | Home Assistant VM | 192.168.68.120 |
 | Frigate LXC | **192.168.68.121** (static — required for Cloudflare) |
-| front_porch_left (Reolink) | 192.168.68.124 |
-| front_porch_right (Reolink) | set in live Frigate config |
-| drive_way (Reolink) | set in live Frigate config |
+| front_porch_left (Reolink) | 192.168.68.112 |
+| front_porch_right (Reolink) | 192.168.68.125 |
+| drive_way (Reolink) | 192.168.68.111 |
 
 ## Ports
 
@@ -83,7 +83,22 @@ Without go2rtc, Frigate live falls back to **jsmpeg of the 640p detect feed** (m
 
 HA `picture-entity` cards still often show the detect entity — use Frigate’s own UI (or a Frigate/WebRTC card) for Reolink-app-like live quality.
 
-Template: `config/config.yml` (passwords via `{FRIGATE_RTSP_PASSWORD}` / env — live secrets stay on the LXC).
+Full config is tracked in `config/config.yml`. Secrets are **env vars only** (see `.env.example`):
+
+| Env var | Used for |
+|---------|----------|
+| `FRIGATE_RTSP_PASSWORD` | Reolink RTSP (`admin:{…}@camera`) |
+| `FRIGATE_MQTT_PASSWORD` | Mosquitto (`mqtt-user`) |
+
+On the LXC: copy `.env.example` → `/opt/frigate/.env`, set real values (quote passwords that contain `$`), then `docker compose up -d`.
+
+### Object detection (what must work)
+
+Not missing: detector, detect roles, `objects.track`, MQTT.  
+If live video + motion boxes work but **no bounding boxes**, loosen filters further or check Debug → Regions. Frigate+ / classifications are optional and not required for HA occupancy.
+
+**Important:** passwords with `$` (e.g. `$WetherillCam$`) break if Docker Compose expands them. Always quote in `.env`:
+`FRIGATE_RTSP_PASSWORD='$WetherillCam$'`
 
 ## Setup Steps (initial LXC)
 

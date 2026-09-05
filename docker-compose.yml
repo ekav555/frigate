@@ -21,7 +21,9 @@ services:
       - "8555:8555/tcp" # WebRTC over TCP
       - "8555:8555/udp" # WebRTC over UDP
     environment:
-      FRIGATE_RTSP_PASSWORD: "${FRIGATE_RTSP_PASSWORD:-password}"
+      # Substituted into config.yml as {FRIGATE_RTSP_PASSWORD} / {FRIGATE_MQTT_PASSWORD}
+      FRIGATE_RTSP_PASSWORD: "${FRIGATE_RTSP_PASSWORD}"
+      FRIGATE_MQTT_PASSWORD: "${FRIGATE_MQTT_PASSWORD}"
 
   # Water meter via RTL-SDR (USB passed into this LXC)
   # Replaces the custom HA Water Meter Monitor add-on + host rtl_tcp
