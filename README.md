@@ -31,7 +31,7 @@ Security camera system using [Frigate](https://docs.frigate.video/) in a Proxmox
 
 | Component | Details |
 |---|---|
-| **Cameras** | Reolink RLC-810A ×2 (`front_porch`, `drive_way`) |
+| **Cameras** | Reolink ×3 (`front_porch_left`, `front_porch_right`, `drive_way`) |
 | **PoE Switch** | STEAMEMO 8-Port Managed Gigabit PoE+ (120W) |
 | **NVR Software** | Frigate (Docker) |
 | **Hardware Decode** | Intel Quick Sync (VAAPI) via `/dev/dri` |
@@ -47,7 +47,8 @@ Security camera system using [Frigate](https://docs.frigate.video/) in a Proxmox
 | Proxmox host | 192.168.68.50 |
 | Home Assistant VM | 192.168.68.120 |
 | Frigate LXC | **192.168.68.121** (static — required for Cloudflare) |
-| front_porch (Reolink) | 192.168.68.124 |
+| front_porch_left (Reolink) | 192.168.68.124 |
+| front_porch_right (Reolink) | set in live Frigate config |
 | drive_way (Reolink) | set in live Frigate config |
 
 ## Ports

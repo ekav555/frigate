@@ -26,11 +26,16 @@ ffmpeg:
 # Without this, Frigate live falls back to jsmpeg of the 640p detect feed.
 go2rtc:
   streams:
-    front_porch:
+    front_porch_left:
       - rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.68.124:554/h265Preview_01_main
-      - "ffmpeg:front_porch#audio=opus"
-    front_porch_sub:
+      - "ffmpeg:front_porch_left#audio=opus"
+    front_porch_left_sub:
       - rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.68.124:554/h264Preview_01_sub
+    front_porch_right:
+      - rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.68.YYY:554/h265Preview_01_main
+      - "ffmpeg:front_porch_right#audio=opus"
+    front_porch_right_sub:
+      - rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.68.YYY:554/h264Preview_01_sub
     drive_way:
       - rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.68.XXX:554/h265Preview_01_main
       - "ffmpeg:drive_way#audio=opus"
@@ -73,15 +78,15 @@ objects:
 # -------------------------------------------------------
 
 cameras:
-  front_porch:
+  front_porch_left:
     enabled: true
     ffmpeg:
       inputs:
-        - path: rtsp://127.0.0.1:8554/front_porch_sub
+        - path: rtsp://127.0.0.1:8554/front_porch_left_sub
           input_args: preset-rtsp-restream
           roles:
             - detect
-        - path: rtsp://127.0.0.1:8554/front_porch
+        - path: rtsp://127.0.0.1:8554/front_porch_left
           input_args: preset-rtsp-restream
           roles:
             - record
@@ -94,8 +99,38 @@ cameras:
       fps: 5
     live:
       streams:
-        Main: front_porch
-        Sub: front_porch_sub
+        Main: front_porch_left
+        Sub: front_porch_left_sub
+    objects:
+      track:
+        - person
+        - car
+        - dog
+        - cat
+
+  front_porch_right:
+    enabled: true
+    ffmpeg:
+      inputs:
+        - path: rtsp://127.0.0.1:8554/front_porch_right_sub
+          input_args: preset-rtsp-restream
+          roles:
+            - detect
+        - path: rtsp://127.0.0.1:8554/front_porch_right
+          input_args: preset-rtsp-restream
+          roles:
+            - record
+            - audio
+    audio:
+      enabled: true
+    detect:
+      width: 640
+      height: 360
+      fps: 5
+    live:
+      streams:
+        Main: front_porch_right
+        Sub: front_porch_right_sub
     objects:
       track:
         - person
