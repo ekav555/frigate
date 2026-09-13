@@ -5,6 +5,8 @@
 #   FRIGATE_RTSP_PASSWORD  — Reolink admin password
 #   FRIGATE_MQTT_PASSWORD  — Mosquitto password
 # Live copy on LXC: /opt/frigate/config/config.yml
+# Host: HP ZBook Studio G5 (i7-8750H / UHD 630 / 32GB) @ 192.168.68.40
+# LXC 101: 10 cores / 8GB — OpenVINO GPU detect (~15% CPU @ 4 cams)
 # Docs: https://docs.frigate.video/configuration/
 # =============================================================
 
@@ -15,35 +17,47 @@ mqtt:
   user: mqtt-user
   password: "{FRIGATE_MQTT_PASSWORD}"
 
+# Object detection on Intel UHD 630 via OpenVINO (NOT the CPU detector).
+# CPU detector pegged ~86% of 10 cores; OpenVINO GPU ~8ms / ~15% system CPU.
+# Docs: https://docs.frigate.video/configuration/object_detectors/
 detectors:
-  cpu1:
-    type: cpu
-    # i7-8750H: driveway LPR at 1280x720 needs more CPU
-    num_threads: 6
+  ov:
+    type: openvino
+    device: GPU
 
-# Intel UHD 630 (host renderD129 → container renderD128). Detect streams are H.264.
-# H.265 record may use CPU decode; fine for 3 cams on this CPU.
+model:
+  width: 300
+  height: 300
+  input_tensor: nhwc
+  input_pixel_format: bgr
+  path: /openvino-model/ssdlite_mobilenet_v2.xml
+  labelmap_path: /openvino-model/coco_91cl_bkgr.txt
+
+# Intel UHD 630 (host renderD129 → container renderD128). Detect = H.264 + QSV.
+# Record stays stream-copy. OpenVINO also uses this iGPU for detection.
 ffmpeg:
   hwaccel_args: preset-intel-qsv-h264
 
-# Recording / snapshots (Frigate 0.17 schema)
+# Recording — WD ~1.8TB @ /media/frigate (motion/events only; continuous=0).
+# 30-day alerts/detections/motion is OK for motion-only; watch System → Storage
+# and `df -h /mnt/frigate-storage` when stressing 6 cams.
 record:
   enabled: true
   alerts:
     retain:
-      days: 14
+      days: 30
   detections:
     retain:
-      days: 14
+      days: 30
   continuous:
     days: 0
   motion:
-    days: 3
+    days: 30
 
 snapshots:
   enabled: true
   retain:
-    default: 14
+    default: 30
 
 # Object AI — required for bounding boxes + HA occupancy
 # Loose filters first; tighten after Debug shows boxes.
@@ -77,37 +91,30 @@ review:
   detections:
     labels: []
 
-# Built-in LPR (no Frigate+ required). Runs on the *detect* stream only.
+# LPR on driveway only (global on; other cams disable below).
 # Docs: https://docs.frigate.video/configuration/license_plate_recognition/
-# 640x360 is too small for plates — driveway detect must be >= 1280x720.
+# Driveway detect must stay >= 1280x720 for usable plates.
 lpr:
   enabled: true
-  device: CPU
+  device: GPU
   detection_threshold: 0.6
   recognition_threshold: 0.7
   min_area: 500
-  # Allow 1-character OCR typos when matching known plates
   match_distance: 1
-  # Save cropped plate images under /media/frigate/clips/lpr/ for debugging
-  debug_save_plates: true
-  # When this plate is read, Frigate sets sub_label on the car.
-  # HA Frigate integration exposes a sensor for known plates (reload
-  # the Frigate integration after applying).
+  debug_save_plates: false
   known_plates:
     gray_suv:
       - "NDG4216"
       - "NDG-4216"
-    # PA test plate on stand — place in front of a *car* Frigate already tracks
     test_stand:
       - "KLL5428"
       - "KLL-5428"
       - "KLL 5428"
 
 # -------------------------------------------------------
-# Cameras (3× Reolink)
-# Porch: H.264 sub @ 640x360. Driveway: raise camera sub to 1280x720
-# (or 1920x1080) in Reolink UI, then match detect width/height below.
-# LPR only on driveway.
+# Cameras (7× Reolink)
+# Porch + side + backyard_*: H.264 sub @ 640x360. Driveway: 1280x720 for LPR.
+# LPR only on driveway. Backyard names are temporary.
 # -------------------------------------------------------
 
 cameras:
@@ -121,14 +128,13 @@ cameras:
         - path: rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.68.112:554/h265Preview_01_main
           roles:
             - record
-            - audio
     detect:
       enabled: true
       width: 640
       height: 360
       fps: 5
     audio:
-      enabled: true
+      enabled: false
     lpr:
       enabled: false
 
@@ -169,12 +175,13 @@ cameras:
       # MUST match Reolink sub-stream resolution (set in camera UI first)
       width: 1280
       height: 720
-      fps: 7
+      fps: 5
     audio:
       enabled: true
     lpr:
       enabled: true
       min_area: 500
+      enhancement: 2
 
   side_yard:
     enabled: true
@@ -197,11 +204,69 @@ cameras:
     lpr:
       enabled: false
 
+  # Temporary names — rename later. Audio on for CPU stress.
+  backyard_2:
+    enabled: true
+    ffmpeg:
+      inputs:
+        - path: rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.68.122:554/h264Preview_01_sub
+          roles:
+            - detect
+        - path: rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.68.122:554/h265Preview_01_main
+          roles:
+            - record
+            - audio
+    detect:
+      enabled: true
+      width: 640
+      height: 360
+      fps: 5
+    audio:
+      enabled: true
+    lpr:
+      enabled: false
+
+  backyard_3:
+    enabled: true
+    ffmpeg:
+      inputs:
+        - path: rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.68.126:554/h264Preview_01_sub
+          roles:
+            - detect
+        - path: rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.68.126:554/h265Preview_01_main
+          roles:
+            - record
+            - audio
+    detect:
+      enabled: true
+      width: 640
+      height: 360
+      fps: 5
+    audio:
+      enabled: true
+    lpr:
+      enabled: false
+
+  backyard_4:
+    enabled: true
+    ffmpeg:
+      inputs:
+        - path: rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.68.125:554/h264Preview_01_sub
+          roles:
+            - detect
+        - path: rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.68.125:554/h265Preview_01_main
+          roles:
+            - record
+            - audio
+    detect:
+      enabled: true
+      width: 640
+      height: 360
+      fps: 5
+    audio:
+      enabled: true
+    lpr:
+      enabled: false
+
 ui:
   timezone: America/New_York
-
-# Verbose LPR logs while tuning the stand / driveway (set back to info later)
-logger:
-  default: info
-  logs:
-    frigate.data_processing.common.license_plate: debug

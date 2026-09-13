@@ -59,4 +59,19 @@ cd /opt/frigate && docker compose up -d frigate
 
 ## Capacity notes
 
-With three cameras recording at ~7 GiB/hour continuous, ~1.7T lasts about **10 days** full-time. Motion/event retain typically lasts longer. See Frigate System → Storage for per-camera rates.
+| Disk | ~1.8 TB usable for Frigate media |
+|------|----------------------------------|
+| Mode | Motion / alerts / detections only (`continuous: 0`) |
+| Retain | **30 days** alerts, detections, motion, snapshots |
+
+Rough guide (motion-only, not continuous):
+- 3–4 cams: 30 days is comfortable on 1.8 TB for typical driveway/porch motion.
+- 6 cams stress: still usually fine with motion-only; watch **Frigate → System → Storage** and:
+
+```bash
+pct exec 101 -- df -h /mnt/frigate-storage
+```
+
+If the disk climbs past ~85%, lower `record.motion.days` (e.g. 14) before continuous recording is ever enabled.
+
+Old note: three cameras at ~7 GiB/hour *continuous* would fill ~1.7T in ~10 days — we do **not** use continuous retain.

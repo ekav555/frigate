@@ -4,7 +4,8 @@ services:
     image: ghcr.io/blakeblackshear/frigate:stable
     restart: unless-stopped
     privileged: true
-    shm_size: "512mb"
+    # Headroom for 7 cameras (driveway detect 1280x720)
+    shm_size: "2048mb"
     devices:
       # Host hybrid: renderD128=NVIDIA, renderD129=Intel UHD 630.
       # Map Intel to renderD128 inside the container so Frigate presets hit QSV.
